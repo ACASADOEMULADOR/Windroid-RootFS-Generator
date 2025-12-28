@@ -24,12 +24,29 @@ jobs:
         sudo rm -f archlinux-bootstrap-x86_64.tar.zst
         sudo mv root.x86_64 /mnt/arch
 
-        sudo arch-chroot /mnt/arch bash -c "pacman-key --init && pacman-key --populate && sed -i "s/#Server/Server/g" /etc/pacman.d/mirrorlist && sed -i "s/CheckSpace/#CheckSpace/g" /etc/pacman.conf && pacman -Syu --noconfirm base base-devel git cmake meson ninja bison flex python-pip wget python-mako python-pyyaml unzip 7zip glslang glib2-devel python-docutils xmlto fop libxslt python-docutils"
+        sudo arch-chroot /mnt/arch bash -c "pacman-key --init && pacman-key --populate && sed -i "s/#Server/Server/g" /etc/pacman.d/mirrorlist && sed -i "s/CheckSpace/#CheckSpace/g" /etc/pacman.conf && pacman -Syu --noconfirm base base-devel git cmake meson ninja bison flex python-pip wget python-mako python-pyyaml unzip 7zip glslang glib2-devel python-docutils xmlto fop libxslt python-docutils ccache"
 
     - name: "Checkout Repository"
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+
+    - name: "Cache Toolchains"
+      uses: actions/cache@v4
+      with:
+        path: |
+           cache/android-ndk
+           cache/mingw
+        key: ${{ runner.os }}-toolchain-${{ hashFiles('**/build-all.sh') }}
+
+    - name: "Cache CCache"
+      uses: actions/cache@v4
+      with:
+        path: |
+           cache/ccache
+        key: ${{ runner.os }}-ccache-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-ccache-
 
     - name: "Copy Repository to Chroot"
       run: |
@@ -75,6 +92,15 @@ jobs:
     - name: "Get Short SHA"
       run: |
         echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+    - name: "Sync Cache from Chroot"
+      if: always()
+      run: |
+        if [ -d "/mnt/arch/MiceWine-RootFS-Generator/cache/ccache" ]; then
+          mkdir -p cache
+          sudo cp -rf /mnt/arch/MiceWine-RootFS-Generator/cache/ccache cache/
+          sudo chown -R $USER:$USER cache/ccache
+        fi
 
     - name: "Create Release"
       uses: softprops/action-gh-release@v1

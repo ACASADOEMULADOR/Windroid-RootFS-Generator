@@ -38,8 +38,22 @@ setupBuildEnv()
 
 	export PATH=$INIT_PATH:$INIT_DIR/cache/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin:$INIT_DIR/cache/mingw/bin
 	export ANDROID_SDK="$1"
-	export CC=$ARCH-linux-android$ANDROID_SDK-clang
-	export CXX=$CC++
+
+    # Configure ccache
+    export CCACHE_DIR="$INIT_DIR/cache/ccache"
+    export CCACHE_COMPILERCHECK=content
+    mkdir -p "$CCACHE_DIR"
+
+    if command -v ccache &> /dev/null; then
+        echo "Enabling ccache..."
+        export CC="ccache $ARCH-linux-android$ANDROID_SDK-clang"
+        export CXX="ccache $CC++"
+    else
+        echo "ccache not found, using standard compiler."
+        export CC=$ARCH-linux-android$ANDROID_SDK-clang
+        export CXX=$CC++
+    fi
+
 	export TOOLCHAIN_VERSION="$ARCH-linux-android-4.9"
 	export TOOLCHAIN_TRIPLE="$ARCH-linux-android"
 	export PKG_CONFIG_PATH="$PREFIX/share/pkgconfig:$PREFIX/lib/pkgconfig"
