@@ -1,4 +1,4 @@
-name: Build and Release MiceWine RootFS
+name: Build and Release Windroid-RootFS
 
 on:
   push:
@@ -79,7 +79,7 @@ jobs:
     - name: "Create Release"
       uses: softprops/action-gh-release@v1
       with:
-        name: "MiceWine RootFS (${{ env.SHORT_SHA }})"
+        name: "Windroid-RootFS (${{ env.SHORT_SHA }})"
         tag_name: ${{ env.SHORT_SHA }}
         prerelease: true
         files: |
