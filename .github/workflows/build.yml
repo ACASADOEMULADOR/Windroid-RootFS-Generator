@@ -110,4 +110,3 @@ jobs:
         prerelease: true
         files: |
           /mnt/arch/*-aarch64.rat
-          /mnt/arch/*.zip
