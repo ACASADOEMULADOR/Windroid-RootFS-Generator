@@ -5,8 +5,8 @@ PKG_DOWNLOADABLE=1
 
 BLACKLIST_ARCH=aarch64
 
-GIT_URL=https://github.com/WINDROID-EMU/Windroid-Wine
-GIT_COMMIT=d1b2b423f6c397783a2c1391be2835662fd9013e
+GIT_URL=https://github.com/WINDROID-EMU/Windroid-WineCE
+GIT_COMMIT=4f8ef97e3c9b84ad906ee3d5c992f657541ada12
 HOST_BUILD_CONFIGURE_ARGS="--enable-win64 --without-x"
 HOST_BUILD_FOLDER="$INIT_DIR/workdir/$package/wine-tools"
 HOST_BUILD_MAKE="make -j $(nproc) __tooldeps__ nls/all"
