@@ -1,18 +1,21 @@
-PKG_VER="10.10-esync-xinput-dinput"
+PKG_VER="10.10-esync-xinput-dinput-aarch64"
 PKG_CATEGORY="Wine"
-PKG_PRETTY_NAME="Wine ($PKG_VER)"
+PKG_PRETTY_NAME="WineEC ($PKG_VER) aarch64"
 PKG_DOWNLOADABLE=1
 
-BLACKLIST_ARCH=x86_64
+# REMOVER ou COMENTAR: BLACKLIST_ARCH=aarch64
 
 GIT_URL=https://github.com/WINDROID-EMU/Windroid-WineCE
-GIT_COMMIT=2a40255a54dfb7c71ec45f118e031291c4f0f7a4
+GIT_COMMIT=master  # Usar master ou branch específico para aarch64
+
 HOST_BUILD_CONFIGURE_ARGS="--enable-win64 --without-x"
 HOST_BUILD_FOLDER="$INIT_DIR/workdir/$package/wine-tools"
 HOST_BUILD_MAKE="make -j $(nproc) __tooldeps__ nls/all"
-OVERRIDE_PREFIX="$(realpath $PREFIX/../wine)"
-CONFIGURE_ARGS="--enable-archs=i386,x86_64 \
-				--host=$TOOLCHAIN_TRIPLE \
+OVERRIDE_PREFIX="$(realpath $PREFIX/../wine-android)"
+
+# Configuração para aarch64 Android
+CONFIGURE_ARGS="--enable-archs=aarch64 \
+				--host=aarch64-linux-android \
 				--with-wine-tools=$INIT_DIR/workdir/$package/wine-tools \
 				--prefix=$OVERRIDE_PREFIX \
 				--without-oss \
@@ -46,6 +49,7 @@ CONFIGURE_ARGS="--enable-archs=i386,x86_64 \
 				--without-dbus \
 				--without-sane \
 				--without-udev \
-				--without-capi"
+				--without-capi \
+				--enable-wineandroid.drv"
 
 DEPENDENCIES="libX11 libXext libXcomposite libXrender libXcursor libXrandr libXxf86vm libXinerama libXfixes libXi Vulkan-Headers Vulkan-Loader libglvnd pulseaudio freetype libgnutls gstreamer gst-plugins-base gst-plugins-ugly gst-plugins-good gst-plugins-bad"
