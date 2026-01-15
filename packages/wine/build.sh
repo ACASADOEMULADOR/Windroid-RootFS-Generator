@@ -1,4 +1,4 @@
-PKG_VER="11.0-rc5"
+PKG_VER="10.13"
 PKG_CATEGORY="Wine"
 PKG_PRETTY_NAME="Wine ($PKG_VER)"
 PKG_DOWNLOADABLE=1
@@ -6,7 +6,7 @@ PKG_DOWNLOADABLE=1
 BLACKLIST_ARCH=aarch64
 
 GIT_URL=https://github.com/WINDROID-EMU/Wine-10.13
-GIT_COMMIT=692ec9fa6794bff6c58a54b7506ec45853a1a4fa
+GIT_COMMIT=d3a566eb3a12c9448b384f31a2490abf05ed9dcf
 HOST_BUILD_CONFIGURE_ARGS="--enable-win64 --without-x"
 HOST_BUILD_FOLDER="$INIT_DIR/workdir/$package/wine-tools"
 HOST_BUILD_MAKE="make -j $(nproc) __tooldeps__ nls/all"
