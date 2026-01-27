@@ -36,7 +36,7 @@ CONFIGURE_ARGS="--enable-archs=i386,x86_64 \
 				--without-usb \
 				--without-sdl \
 				--without-cups \
-				--without-netapi \
+				--with-netapi \
 				--without-pcap \
 				--without-gphoto \
 				--without-v4l2 \
