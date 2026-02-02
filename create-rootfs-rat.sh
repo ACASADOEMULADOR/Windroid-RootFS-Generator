@@ -59,6 +59,7 @@ cd /tmp/$RAND_VAL
 mkdir -p "vulkanDrivers"
 mkdir -p "adrenoTools"
 mkdir -p "box64"
+mkdir -p "fex"
 mkdir -p "wine"
 
 touch new_makeSymlinks.sh
@@ -77,6 +78,8 @@ for i in $ROOTFS_PKGS; do
       cp -f "$resolvedPath" "vulkanDrivers"
     elif [ "$packageCategory" == "Box64" ]; then
       cp -f "$resolvedPath" "box64"
+    elif [ "$packageCategory" == "FEX" ]; then
+      cp -f "$resolvedPath" "fex"
     elif [ "$packageCategory" == "Wine" ]; then
       cp -f "$resolvedPath" "wine"
     elif [ "$packageCategory" == "AdrenoTools" ]; then
