@@ -14,3 +14,24 @@ diff -uNr 58-android-shmem/shmem.c 58-android-shmem.mod/shmem.c
  #define ANDROID_SHMEM_SOCKNAME "/dev/shm/%08x"
  #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
  
+@@ -399,6 +403,7 @@
+ 
+ 	shmem = realloc(shmem, shmem_amount * sizeof(shmem_t));
+ 	size = ROUND_UP(size, getpagesize());
++	if (size < 8 * 1024 * 1024) size = 8 * 1024 * 1024;
+ 	shmem[idx].size = size;
+ 	shmem[idx].descriptor = ashmem_create_region(buf, size);
+ 	shmem[idx].addr = NULL;
+@@ -468,6 +473,11 @@
+ 			shmem[idx].addr = NULL;
+ 		}
+ 	}
++
++#ifdef MADV_HUGEPAGE
++	if (shmem[idx].addr)
++		madvise(shmem[idx].addr, shmem[idx].size, MADV_HUGEPAGE);
++#endif
++
+ 	addr = shmem[idx].addr;
+ 	DBG ("%s: mapped addr %p for FD %d ID %d", __PRETTY_FUNCTION__, addr, shmem[idx].descriptor, idx);
+ 	pthread_mutex_unlock (&mutex);
