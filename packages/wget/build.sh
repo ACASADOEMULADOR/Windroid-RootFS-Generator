@@ -1,0 +1,5 @@
+PKG_VER="1.21.4"
+PKG_CATEGORY="Network"
+SRC_URL="https://ftp.gnu.org/gnu/wget/wget-1.21.4.tar.gz"
+CONFIGURE_ARGS="--host=$TOOLCHAIN_TRIPLE host_alias=$TOOLCHAIN_TRIPLE --with-ssl=openssl"
+DEPENDENCIES="openssl zlib"

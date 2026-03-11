@@ -224,4 +224,12 @@ case "$1" in "--optional")
 	customDxvkDownload "DXVK-1.10.6-Sarek-ASync" "https://github.com/pythonlover02/DXVK-Sarek/releases/download/v1.10.6/dxvk-sarek-async-v1.10.6.tar.gz"
 esac
 
+mkdir -p "$WORKDIR/usr/bin"
+if [ ! -f "$WORKDIR/usr/bin/winetricks" ]; then
+    echo "Downloading Winetricks..."
+    curl -# -L -o "$WORKDIR/usr/bin/winetricks" "https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks"
+    chmod +x "$WORKDIR/usr/bin/winetricks"
+fi
+
 cp -rf "$INIT_DIR/common/"* .
+
