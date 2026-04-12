@@ -1,5 +1,5 @@
 PKG_VER="1.11"
 PKG_CATEGORY="System"
-SRC_URL="https://github.com/kyz/libmspack/releases/download/v1.11/cabextract-1.11.tar.gz"
+SRC_URL="https://ftp.debian.org/debian/pool/main/c/cabextract/cabextract_1.11.orig.tar.gz"
 CONFIGURE_ARGS="--host=$TOOLCHAIN_TRIPLE host_alias=$TOOLCHAIN_TRIPLE"
 DEPENDENCIES=""
