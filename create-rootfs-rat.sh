@@ -95,6 +95,8 @@ for i in $ROOTFS_PKGS; do
       cat makeSymlinks.sh >> new_makeSymlinks.sh
       rm -f makeSymlinks.sh
     fi
+
+    rm -f pkg-header
   fi
 done
 
