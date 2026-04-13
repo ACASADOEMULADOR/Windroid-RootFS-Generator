@@ -54,9 +54,11 @@ jobs:
 
     - name: "Download Latest Release Rat Packages"
       run: |
-        curl -LO# https://github.com/KreitinnSoftware/Windroid-RootFS-Generator/releases/download/$(curl -s https://api.github.com/repos/KreitinnSoftware/Windroid-RootFS-Generator/releases | grep tag_name -m 1 | cut -d ":" -f 2 | sed "s/\"//g" | sed "s/,//g" | sed "s/ //g")/Windroid-Packages.zip || true
-        sudo unzip -o Windroid-Packages.zip -d /mnt/arch/Windroid-RootFS-Generator/built-pkgs || true
-        rm -f Windroid-Packages.zip
+        curl -fLO# "https://github.com/${{ github.repository }}/releases/download/$(curl -s https://api.github.com/repos/${{ github.repository }}/releases | grep tag_name -m 1 | cut -d ':' -f 2 | sed 's/"//g' | sed 's/,//g' | sed 's/ //g')/Windroid-Packages.zip" || true
+        if [ -f "Windroid-Packages.zip" ]; then
+          sudo unzip -o Windroid-Packages.zip -d /mnt/arch/Windroid-RootFS-Generator/built-pkgs || true
+          rm -f Windroid-Packages.zip
+        fi
 
     - name: "Setup Basic Android (x86_64) Runtime Environment (Required for Building x86_64 glib)"
       run: |
@@ -102,6 +104,13 @@ jobs:
           sudo chown -R $USER:$USER cache/ccache
         fi
 
+    - name: "Upload Logs on Failure"
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Build-Logs-${{ github.sha }}
+        path: /mnt/arch/Windroid-RootFS-Generator/logs/
+
     - name: "Create Release"
       uses: softprops/action-gh-release@v1
       with:
@@ -110,3 +119,5 @@ jobs:
         prerelease: true
         files: |
           /mnt/arch/*-aarch64.rat
+          /mnt/arch/*-x86_64.rat
+          /mnt/arch/Windroid-Packages.zip

@@ -47,11 +47,11 @@ setupBuildEnv()
     if command -v ccache &> /dev/null; then
         echo "Enabling ccache..."
         export CC="ccache $ARCH-linux-android$ANDROID_SDK-clang"
-        export CXX="ccache $CC++"
+        export CXX="ccache $ARCH-linux-android$ANDROID_SDK-clang++"
     else
         echo "ccache not found, using standard compiler."
-        export CC=$ARCH-linux-android$ANDROID_SDK-clang
-        export CXX=$CC++
+        export CC="$ARCH-linux-android$ANDROID_SDK-clang"
+        export CXX="$ARCH-linux-android$ANDROID_SDK-clang++"
     fi
 
 	export TOOLCHAIN_VERSION="$ARCH-linux-android-4.9"
@@ -484,12 +484,12 @@ compileAll()
 
 		if [ "$?" != "0" ]; then
 			echo "- [$packageNum/$packageCount] Package: '"$package"' failed to compile. Check logs"
-			exit 0
+			exit 1
 		fi
 
 		if [ ! -d "$packageDestDirPkg/data/data/com.windroid.emu" ]; then
 			echo "- [$packageNum/$packageCount] Package: '"$package"' failed to compile. Check logs"
-			exit 0
+			exit 1
 		fi
 
 		cp -rf "$packageDestDirPkg/data/data/com.windroid.emu/"* "/data/data/com.windroid.emu"
