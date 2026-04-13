@@ -67,7 +67,7 @@ touch new_makeSymlinks.sh
 for i in $ROOTFS_PKGS; do
   resolvedPath=$(resolvePath "$i")
 
-  if [ -n "$resolvedPath" ] && [ ! -f "$INIT_DIR/built-pkgs/$(basename $i | sed "s/.rat/.isOptional/g")" ]; then
+  if [ -n "$resolvedPath" ]; then
     echo "Extracting '$(basename $resolvedPath)'..."
 
     tar -xf "$resolvedPath" pkg-header
@@ -78,10 +78,13 @@ for i in $ROOTFS_PKGS; do
       cp -f "$resolvedPath" "vulkanDrivers"
     elif [ "$packageCategory" == "Box64" ]; then
       cp -f "$resolvedPath" "box64"
+      tar -xf "$resolvedPath"
     elif [ "$packageCategory" == "FEX" ]; then
       cp -f "$resolvedPath" "fex"
+      tar -xf "$resolvedPath"
     elif [ "$packageCategory" == "Wine" ]; then
       cp -f "$resolvedPath" "wine"
+      tar -xf "$resolvedPath"
     elif [ "$packageCategory" == "AdrenoTools" ]; then
       cp -f "$resolvedPath" "adrenoTools"
     else
