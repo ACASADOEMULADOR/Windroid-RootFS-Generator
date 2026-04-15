@@ -13,7 +13,10 @@ setupBuildEnv()
 		fi
 		echo "Unpacking NDK..."
 		unzip "cache/$NDK_FILENAME" -d "cache" &> /dev/null
-		mv "cache/$(unzip -Z1 "cache/$NDK_FILENAME" | cut -d "/" -f 1 | head -n 1)" "cache/android-ndk"
+		NDK_DIR=$(unzip -Z1 "cache/$NDK_FILENAME" 2>/dev/null | head -n 1 | cut -d "/" -f 1)
+		if [ -n "$NDK_DIR" ] && [ -d "cache/$NDK_DIR" ]; then
+			mv "cache/$NDK_DIR" "cache/android-ndk"
+		fi
 		chmod -R +x "cache/android-ndk"
 		rm -f "cache/$NDK_FILENAME"
 		echo ""
@@ -31,7 +34,10 @@ setupBuildEnv()
 		fi
 		echo "Unpacking MinGW..."
 		tar -xf "cache/$MINGW_FILENAME" -C "cache"
-		mv "cache/$(tar -tf "cache/$MINGW_FILENAME" | cut -d "/" -f 1 | head -n 1)/$(tar -tf "cache/$MINGW_FILENAME" | cut -d "/" -f 2 | head -n 1)" "cache/mingw"
+		MINGW_DIR=$(tar -tf "cache/$MINGW_FILENAME" 2>/dev/null | head -n 1 | cut -d "/" -f 1)
+		if [ -n "$MINGW_DIR" ] && [ -d "cache/$MINGW_DIR" ]; then
+			mv "cache/$MINGW_DIR" "cache/mingw"
+		fi
 		rm -f "cache/$MINGW_FILENAME"
 		echo ""
 	fi
