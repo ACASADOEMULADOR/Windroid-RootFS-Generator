@@ -1,5 +1,5 @@
---- Vulkan-Tools-1.4.349.orig/cube/CMakeLists.txt	2026-04-14 21:46:33.557525352 -0300
-+++ Vulkan-Tools-1.4.349/cube/CMakeLists.txt	2026-04-14 21:46:46.581306079 -0300
+--- Vulkan-Tools-1.4.349.orig/cube/CMakeLists.txt	2026-04-10 00:36:14.000000000 -0300
++++ Vulkan-Tools-1.4.349/cube/CMakeLists.txt	2026-04-14 21:55:17.136212374 -0300
 @@ -67,7 +67,7 @@
      endif()
  endif()
@@ -18,29 +18,39 @@
      list(APPEND ENABLED_CUBE_PLATFORMS VK_USE_PLATFORM_ANDROID_KHR)
  elseif(APPLE)
      list(APPEND ENABLED_CUBE_PLATFORMS VK_USE_PLATFORM_METAL_EXT)
-@@ -293,25 +293,7 @@
+@@ -239,13 +239,6 @@
+ 
+ if(APPLE)
+     add_subdirectory(macOS/cube)
+-elseif (ANDROID)
+-    add_library(vkcube MODULE)
+-
+-    target_sources(vkcube PRIVATE cube.c)
+-
+-    add_subdirectory(android)
+-
+ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux|BSD|GNU")
+     add_executable(vkcube)
+     target_sources(vkcube PRIVATE
+@@ -293,9 +286,7 @@
  target_include_directories(vkcube PRIVATE .)
  target_link_libraries(vkcube ${CMAKE_DL_LIBS} Vulkan::Headers)
  
 -if (ANDROID)
 -    install(TARGETS vkcube DESTINATION ${CMAKE_INSTALL_LIBDIR})
 -elseif(APPLE)
--    install(
--        TARGETS vkcube
--        # Install runtime dependencies like the Vulkan::Loader so the app is self-contained
--        RUNTIME_DEPENDENCIES DESTINATION "cube/vkcube.app/Contents/Frameworks/"
--        BUNDLE DESTINATION "cube"
--    )
--    set_target_properties(vkcube PROPERTIES
--        INSTALL_RPATH @executable_path/../Frameworks
--    )
--else()
--    install(TARGETS vkcube)
--endif()
++if(APPLE)
+     install(
+         TARGETS vkcube
+         # Install runtime dependencies like the Vulkan::Loader so the app is self-contained
+@@ -309,10 +300,6 @@
+     install(TARGETS vkcube)
+ endif()
  
 -if (ANDROID)
 -    return()
 -endif()
- 
+-
  # ----------------------------------------------------------------------------
  # vkcubepp
+ 
