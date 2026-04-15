@@ -90,27 +90,72 @@ downloadPackage()
 		echo "-- Package '$package' already downloaded."
 	else
 		echo "-- Downloading '$package'..."
-		curl --output "$INIT_DIR/cache/$package" -# -L $SRC_URL
+		local retry_count=0
+		local max_retries=3
+		
+		while [ $retry_count -lt $max_retries ]; do
+			if curl -f --output "$INIT_DIR/cache/$package" -# -L $SRC_URL; then
+				break
+			else
+				rm -f "$INIT_DIR/cache/$package"
+				retry_count=$((retry_count + 1))
+				echo "-- Download failed, retrying ($retry_count/$max_retries)..."
+				[ $retry_count -lt $max_retries ] && sleep 2
+			fi
+		done
+		
+		if [ ! -f "$INIT_DIR/cache/$package" ]; then
+			echo "E: Failed to download '$package' after $max_retries attempts."
+			exit 1
+		fi
 	fi
 
+	# Verify downloaded file is valid
+	if [ ! -s "$INIT_DIR/cache/$package" ]; then
+		echo "E: Downloaded file for '$package' is empty."
+		rm -f "$INIT_DIR/cache/$package"
+		exit 1
+	fi
+	
 	local ARCHIVE_MIME_TYPE=$(file -b --mime-type $INIT_DIR/cache/$package)
 	local ARCHIVE_BASE_FOLDER
 
 	case $ARCHIVE_MIME_TYPE in "application/x-xz"|"application/gzip"|"application/x-bzip2")
-		ARCHIVE_BASE_FOLDER=$(tar -tf "$INIT_DIR/cache/$package" | cut -d "/" -f 1 | head -n 1)
+		ARCHIVE_BASE_FOLDER=$(tar -tf "$INIT_DIR/cache/$package" 2>/dev/null | cut -d "/" -f 1 | head -n 1)
+		if [ -z "$ARCHIVE_BASE_FOLDER" ]; then
+			echo "E: Failed to read archive structure for '$package'."
+			rm -f "$INIT_DIR/cache/$package"
+			exit 1
+		fi
 
 		if [ ! -f "$ARCHIVE_BASE_FOLDER" ]; then
 			tar -xf "$INIT_DIR/cache/$package"
 		fi
 		;;
-		*)
-		ARCHIVE_BASE_FOLDER=$(unzip -Z1 "$INIT_DIR/cache/$package" | cut -d "/" -f 1 | head -n 1)
+		"application/zip")
+		ARCHIVE_BASE_FOLDER=$(unzip -Z1 "$INIT_DIR/cache/$package" 2>/dev/null | cut -d "/" -f 1 | head -n 1)
+		if [ -z "$ARCHIVE_BASE_FOLDER" ]; then
+			echo "E: Failed to read zip archive structure for '$package'. File may be corrupted."
+			rm -f "$INIT_DIR/cache/$package"
+			exit 1
+		fi
 
 		if [ ! -f "$ARCHIVE_BASE_FOLDER" ]; then
 			unzip -o "$INIT_DIR/cache/$package" 1> /dev/null
 		fi
+		;;
+		*)
+		echo "E: Unknown archive format for '$package': $ARCHIVE_MIME_TYPE"
+		rm -f "$INIT_DIR/cache/$package"
+		exit 1
+		;;
 	esac
 
+	if [ -z "$ARCHIVE_BASE_FOLDER" ]; then
+		echo "E: Could not determine base folder for '$package'."
+		exit 1
+	fi
+	
 	mv $ARCHIVE_BASE_FOLDER $package
 }
 
