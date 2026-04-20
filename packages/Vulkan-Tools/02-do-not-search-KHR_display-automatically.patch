@@ -2,31 +2,27 @@ https://github.com/termux/termux-packages/issues/22542
 
 --- a/cube/cube.c
 +++ b/cube/cube.c
-@@ -3931,7 +3931,11 @@ static void demo_init_vk(struct demo *demo) {
+@@ -3915,7 +3915,11 @@ static void demo_check_and_set_wsi_platform(struct demo *demo) {
  #endif
  #if defined(VK_USE_PLATFORM_DISPLAY_KHR)
-             if (!strcmp(VK_KHR_DISPLAY_EXTENSION_NAME, instance_extensions[i].extensionName) &&
+     if (demo->wsi_platform == WSI_PLATFORM_DISPLAY ||
 +#ifdef __ANDROID__
-+                (demo->wsi_platform == WSI_PLATFORM_DISPLAY)) {
++        demo->wsi_platform == WSI_PLATFORM_DISPLAY) {
 +#else
-                 (demo->wsi_platform == WSI_PLATFORM_AUTO || demo->wsi_platform == WSI_PLATFORM_DISPLAY)) {
+         demo->wsi_platform == WSI_PLATFORM_AUTO) {
 +#endif
-                 platformSurfaceExtFound = true;
-                 demo->extension_names[demo->enabled_extension_count++] = VK_KHR_DISPLAY_EXTENSION_NAME;
-             }
-diff --git a/cube/cube.cpp b/cube/cube.cpp
-index 6c4f9b05..e488f2ef 100644
---- a/cube/cube.cpp
-+++ b/cube/cube.cpp
-@@ -1534,7 +1534,11 @@ void Demo::init_vk() {
+         bool display_extension_available = false;
+         for (uint32_t i = 0; i < demo->enabled_extension_count; i++) {
+             if (strcmp(demo->extension_names[i], VK_KHR_DISPLAY_EXTENSION_NAME) == 0) {
+@@ -1436,7 +1436,11 @@ void Demo::init_vk() {
  #endif
  #if defined(VK_USE_PLATFORM_DISPLAY_KHR)
-         else if (!strcmp(VK_KHR_DISPLAY_EXTENSION_NAME, extension.extensionName) &&
+     if (wsi_platform == WsiPlatform::display ||
 +#ifdef __ANDROID__
-+                 (wsi_platform == WsiPlatform::display)) {
++        wsi_platform == WsiPlatform::display) {
 +#else
-                  (wsi_platform == WsiPlatform::auto_ || wsi_platform == WsiPlatform::display)) {
+         wsi_platform == WsiPlatform::auto_) {
 +#endif
-             platformSurfaceExtFound = 1;
-             enabled_instance_extensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);
-         }
+         bool display_extension_available = false;
+         for (auto extension : instance_extensions) {
+             if (!strcmp(VK_KHR_DISPLAY_EXTENSION_NAME, extension.extensionName)) {
