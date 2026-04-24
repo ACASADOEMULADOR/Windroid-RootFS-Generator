@@ -6,7 +6,7 @@ PKG_DOWNLOADABLE=1
 BLACKLIST_ARCH=aarch64
 
 GIT_URL=https://github.com/WINDROID-EMU/Windroidr-Proton
-GIT_COMMIT=d2d0b4a8f1f130b4edc33a4ce0b9d13c25580c8c
+GIT_COMMIT=db2d724346a8bfbddbc9a06d87c5e498cb5c3cb9
 HOST_BUILD_CONFIGURE_ARGS="--enable-win64 --without-x"
 HOST_BUILD_FOLDER="$INIT_DIR/workdir/$package/wine-tools"
 HOST_BUILD_MAKE="make -j $(nproc) __tooldeps__ nls/all"
