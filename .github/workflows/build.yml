@@ -111,4 +111,5 @@ jobs:
         tag_name: ${{ env.SHORT_SHA }}
         prerelease: true
         files: |
-          /mnt/arch/*-aarch64.rat
+          /mnt/arch/*.rat
+          /mnt/arch/*.zip
