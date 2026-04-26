@@ -484,12 +484,12 @@ compileAll()
 
 		if [ "$?" != "0" ]; then
 			echo "- [$packageNum/$packageCount] Package: '"$package"' failed to compile. Check logs"
-			exit 0
+			exit 1
 		fi
 
 		if [ ! -d "$packageDestDirPkg/data/data/com.micewine.emu" ]; then
 			echo "- [$packageNum/$packageCount] Package: '"$package"' failed to compile. Check logs"
-			exit 0
+			exit 1
 		fi
 
 		cp -rf "$packageDestDirPkg/data/data/com.micewine.emu/"* "/data/data/com.micewine.emu"
