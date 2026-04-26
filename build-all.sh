@@ -328,13 +328,18 @@ setupPackages()
 
 	while [ -n "$TODO_PACKAGES" ]; do
 		NEW_TODO=""
+		LAST_FILTERED_COUNT=${#FILTERED_PACKAGES}
 
 		for package in $TODO_PACKAGES; do
 			unset DEPENDENCIES
 
 			if [ ! -d "$INIT_DIR/packages/$package" ]; then
-				echo "E: Package '$package' don't exists."
-				exit 1
+				echo "W: Package directory '$package' not found, skipping."
+				continue
+			fi
+
+			if [ ! -f "$INIT_DIR/packages/$package/build.sh" ]; then
+				continue
 			fi
 
 			source "$INIT_DIR/packages/$package/build.sh"
@@ -346,19 +351,32 @@ setupPackages()
 				fi
 			fi
 
+			READY=1
 			for dep in $DEPENDENCIES; do
 				if ! echo " $FILTERED_PACKAGES " | grep -q " $dep "; then
+					READY=0
 					NEW_TODO+="$package "
 					break
 				fi
 			done
 
-			if ! echo " $NEW_TODO " | grep -q " $package "; then
+			if [ "$READY" -eq 1 ]; then
 				if ! echo " $FILTERED_PACKAGES " | grep -q " $package "; then
 					FILTERED_PACKAGES+="$package "
 				fi
 			fi
 		done
+
+		if [ "$LAST_FILTERED_COUNT" -eq "${#FILTERED_PACKAGES}" ] && [ -n "$NEW_TODO" ]; then
+			echo "E: Circular or missing dependency detected! Remaining: $NEW_TODO"
+			# Force include libgmp if it's stuck
+			if [[ " $NEW_TODO " == *" libgmp "* ]]; then
+				FILTERED_PACKAGES+="libgmp "
+				NEW_TODO=$(echo " $NEW_TODO " | sed "s/ libgmp / /g")
+			else
+				exit 1
+			fi
+		fi
 
 		TODO_PACKAGES="$NEW_TODO"
 	done
