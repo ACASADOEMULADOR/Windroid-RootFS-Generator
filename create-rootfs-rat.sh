@@ -30,11 +30,13 @@ fi
 
 ROOTFS_PKGS+=" $WINE_UTILS_PKG"
 
-if [ -f "$WINE_PKG" ]; then
-  ROOTFS_PKGS+=" $WINE_PKG"
-else
-  echo "Warning, Wine Not Found."
-fi
+for pkg in $WINE_PKG; do
+  if [ -f "$pkg" ]; then
+    ROOTFS_PKGS+=" $pkg"
+  else
+    echo "Warning, Wine Not Found: $pkg"
+  fi
+done
 
 resolvePath()
 {
