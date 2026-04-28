@@ -9,7 +9,7 @@ GIT_URL="https://github.com/ACASADOEMULADOR/Wine-arm64ec.git"
 GIT_COMMIT="ad2c2468a2cf3c39d8487bb3c08b3c4fb479d350"
 
 # Disable blacklist since we want to build natively for aarch64
-# BLACKLIST_ARCH=aarch64
+BLACKLIST_ARCH=x86_64
 
 HOST_BUILD_CONFIGURE_ARGS="--enable-archs=aarch64,x86_64,i386 --without-x"
 HOST_BUILD_FOLDER="$INIT_DIR/workdir/$package/wine-tools"
