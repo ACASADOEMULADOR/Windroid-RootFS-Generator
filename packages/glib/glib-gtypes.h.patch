@@ -1,6 +1,6 @@
---- a/glib/gtypes.h
-+++ b/glib/gtypes.h
-@@ -429,6 +429,10 @@
+--- glib-2.88.0/glib/gtypes.h	2025-05-01 00:00:00.000000000 -0300
++++ glib-2.88.0-fix/glib/gtypes.h	2025-05-01 00:00:00.000000000 -0300
+@@ -460,6 +460,10 @@
  #endif
  #endif
  
@@ -8,6 +8,6 @@
 +#undef _GLIB_HAVE_BUILTIN_OVERFLOW_CHECKS
 +#endif
 +
- #ifdef _GLIB_HAVE_BUILTIN_OVERFLOW_CHECKS
+ #ifdef _GLIB_HAVE_STD_OVERFLOW_CHECKS
  
- #define g_uint_checked_add(dest, a, b) \
+ #include <stdckdint.h>
