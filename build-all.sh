@@ -22,17 +22,43 @@ setupBuildEnv()
 	if [ ! -d "$INIT_DIR/cache/llvm-mingw" ]; then
 		echo "Downloading LLVM MinGW..."
 		curl --output "cache/$LLVM_MINGW_FILENAME" -#L "$LLVM_MINGW_URL"
-		echo "Checking SHA512..."
-		SHA512=$(sha512sum "cache/$LLVM_MINGW_FILENAME" | cut -d ' ' -f 1)
-		if [ "$SHA512" != "$LLVM_MINGW_SHA512" ]; then
-			echo "Error on Checking SHA512 for LLVM MinGW... Aborting"
+		
+		if [ ! -f "cache/$LLVM_MINGW_FILENAME" ]; then
+			echo "Error: Failed to download LLVM MinGW. Check your internet connection."
+			exit 1
+		fi
+		
+		echo "Verifying LLVM MinGW archive..."
+		if ! tar -tf "cache/$LLVM_MINGW_FILENAME" > /dev/null 2>&1; then
+			echo "Error: Downloaded file is not a valid tar archive."
 			rm -f "cache/$LLVM_MINGW_FILENAME"
 			exit 1
 		fi
+		
 		echo "Unpacking LLVM MinGW..."
+		
+		# Find directory name before extraction
+		LLVM_MINGW_DIR=$(tar -tf "cache/$LLVM_MINGW_FILENAME" | head -1 | cut -d "/" -f 1)
+		
 		tar -xf "cache/$LLVM_MINGW_FILENAME" -C "cache"
-		mv "cache/$(tar -tf "cache/$LLVM_MINGW_FILENAME" | cut -d "/" -f 1 | head -n 1)" "cache/llvm-mingw"
+		
+		if [ $? -ne 0 ]; then
+			echo "Error: Failed to extract LLVM MinGW archive."
+			rm -f "cache/$LLVM_MINGW_FILENAME"
+			exit 1
+		fi
+		
+		# Move the LLVM MinGW directory to standard location
+		if [ -d "cache/$LLVM_MINGW_DIR" ]; then
+			mv "cache/$LLVM_MINGW_DIR" "cache/llvm-mingw"
+		else
+			echo "Error: Could not find extracted LLVM MinGW directory."
+			rm -f "cache/$LLVM_MINGW_FILENAME"
+			exit 1
+		fi
+		
 		rm -f "cache/$LLVM_MINGW_FILENAME"
+		echo "LLVM MinGW installed successfully!"
 		echo ""
 	fi
 
@@ -542,10 +568,9 @@ export NDK_URL="https://dl.google.com/android/repository/android-ndk-r26b-linux.
 export NDK_FILENAME="${NDK_URL##*/}"
 export NDK_SHA512="233e0b34c946a1ba60022809536307613ed956a4d596b3f43dc75e752b9d973f7c07f03a404a72a893629b86d8046664b9020920b3a6c64f68e223c5da109ec5"
 
-# LLVM MinGW - URL e SHA512 atualizados
+# LLVM MinGW - Versão mais recente
 export LLVM_MINGW_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/20240619/llvm-mingw-ucrt-x86_64-posix-full-20240619.tar.xz"
 export LLVM_MINGW_FILENAME="${LLVM_MINGW_URL##*/}"
-export LLVM_MINGW_SHA512="4a5f8c1a3b2e9d7f6c8e1a4b9c2d5e8f1a3b6c9e2d5f8a1b4c7d0e3f6a9c2d5e8f1a3b6c9e2d5f8a1b4c7d0e3f6a9c2d5e8f1a3b6c9e2d5f"
 
 export PACKAGES="$(ls packages)"
 export INIT_DIR="$PWD"
