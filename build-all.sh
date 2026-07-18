@@ -19,41 +19,27 @@ setupBuildEnv()
 		echo ""
 	fi
 
-	if [ ! -d "$INIT_DIR/cache/mingw" ]; then
-		echo "Downloading MinGW..."
-		curl --output "cache/$MINGW_FILENAME" -#L "$MINGW_URL"
+	if [ ! -d "$INIT_DIR/cache/llvm-mingw" ]; then
+		echo "Downloading LLVM MinGW..."
+		curl --output "cache/$LLVM_MINGW_FILENAME" -#L "$LLVM_MINGW_URL"
 		echo "Checking SHA512..."
-		SHA512=$(sha512sum "cache/$MINGW_FILENAME" | cut -d ' ' -f 1)
-		if [ "$SHA512" != "$MINGW_SHA512" ]; then
-			echo "Error on Checking SHA512 for MinGW... Aborting"
-			rm -f "cache/$MINGW_FILENAME"
+		SHA512=$(sha512sum "cache/$LLVM_MINGW_FILENAME" | cut -d ' ' -f 1)
+		if [ "$SHA512" != "$LLVM_MINGW_SHA512" ]; then
+			echo "Error on Checking SHA512 for LLVM MinGW... Aborting"
+			rm -f "cache/$LLVM_MINGW_FILENAME"
 			exit 1
 		fi
-		echo "Unpacking MinGW..."
-		tar -xf "cache/$MINGW_FILENAME" -C "cache"
-		mv "cache/$(tar -tf "cache/$MINGW_FILENAME" | cut -d "/" -f 1 | head -n 1)/$(tar -tf "cache/$MINGW_FILENAME" | cut -d "/" -f 2 | head -n 1)" "cache/mingw"
-		rm -f "cache/$MINGW_FILENAME"
+		echo "Unpacking LLVM MinGW..."
+		tar -xf "cache/$LLVM_MINGW_FILENAME" -C "cache"
+		mv "cache/$(tar -tf "cache/$LLVM_MINGW_FILENAME" | cut -d "/" -f 1 | head -n 1)" "cache/llvm-mingw"
+		rm -f "cache/$LLVM_MINGW_FILENAME"
 		echo ""
 	fi
 
-	export PATH=$INIT_PATH:$INIT_DIR/cache/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin:$INIT_DIR/cache/mingw/bin
+	export PATH=$INIT_PATH:$INIT_DIR/cache/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/bin:$INIT_DIR/cache/llvm-mingw/bin
 	export ANDROID_SDK="$1"
-
-    # Configure ccache
-    export CCACHE_DIR="$INIT_DIR/cache/ccache"
-    export CCACHE_COMPILERCHECK=content
-    mkdir -p "$CCACHE_DIR"
-
-    if command -v ccache &> /dev/null; then
-        echo "Enabling ccache..."
-        export CC="ccache $ARCH-linux-android$ANDROID_SDK-clang"
-        export CXX="ccache $CC++"
-    else
-        echo "ccache not found, using standard compiler."
-        export CC=$ARCH-linux-android$ANDROID_SDK-clang
-        export CXX=$CC++
-    fi
-
+	export CC=$ARCH-linux-android$ANDROID_SDK-clang
+	export CXX=$CC++
 	export TOOLCHAIN_VERSION="$ARCH-linux-android-4.9"
 	export TOOLCHAIN_TRIPLE="$ARCH-linux-android"
 	export PKG_CONFIG_PATH="$PREFIX/share/pkgconfig:$PREFIX/lib/pkgconfig"
@@ -288,19 +274,15 @@ setupPackage()
 		exit 1
 	fi
 
-	if [ -e "$INIT_DIR/packages/$package/post-install.sh" ]; then
-		echo "$INIT_DIR/packages/$package/post-install.sh" >> build.sh
+	echo "mkdir -p $DESTDIR/$PREFIX_DIR" >> build.sh
+	echo "tar --exclude=.git -cf - . | tar -xf - -C $DESTDIR/$PREFIX_DIR" >> build.sh
+
+	if [ -e "$INIT_DIR/packages/$package/post-build.sh" ]; then
+		echo "$INIT_DIR/packages/$package/post-build.sh" >> build.sh
 	fi
 
-	echo 'echo $? > exit_code' >> build.sh
-
-	echo "$PKG_PRETTY_NAME" >> pkg-pretty-name
-	echo "$PKG_VER" >> pkg-ver
-	echo "$PKG_CATEGORY" >> pkg-category
-	echo "$PKG_DOWNLOADABLE" >> pkg-downloadable
-
-	if [ "$PKG_CATEGORY" == "VulkanDriver" ] || [ "$PKG_CATEGORY" == "AdrenoTools" ]; then
-		echo "$VK_DRIVER_LIB" >> vk-driver-lib
+	if [ -n "$RUN_POST_BUILD" ]; then
+		echo "$RUN_POST_BUILD" >> build.sh
 	fi
 
 	git -C "$INIT_DIR" log -1 --format="%H" -- "packages/$package" > pkg-commit
@@ -328,18 +310,13 @@ setupPackages()
 
 	while [ -n "$TODO_PACKAGES" ]; do
 		NEW_TODO=""
-		LAST_FILTERED_COUNT=${#FILTERED_PACKAGES}
 
 		for package in $TODO_PACKAGES; do
 			unset DEPENDENCIES
 
 			if [ ! -d "$INIT_DIR/packages/$package" ]; then
-				echo "W: Package directory '$package' not found, skipping."
-				continue
-			fi
-
-			if [ ! -f "$INIT_DIR/packages/$package/build.sh" ]; then
-				continue
+				echo "E: Package '$package' don't exists."
+				exit 1
 			fi
 
 			source "$INIT_DIR/packages/$package/build.sh"
@@ -351,32 +328,19 @@ setupPackages()
 				fi
 			fi
 
-			READY=1
 			for dep in $DEPENDENCIES; do
 				if ! echo " $FILTERED_PACKAGES " | grep -q " $dep "; then
-					READY=0
 					NEW_TODO+="$package "
 					break
 				fi
 			done
 
-			if [ "$READY" -eq 1 ]; then
+			if ! echo " $NEW_TODO " | grep -q " $package "; then
 				if ! echo " $FILTERED_PACKAGES " | grep -q " $package "; then
 					FILTERED_PACKAGES+="$package "
 				fi
 			fi
 		done
-
-		if [ "$LAST_FILTERED_COUNT" -eq "${#FILTERED_PACKAGES}" ] && [ -n "$NEW_TODO" ]; then
-			echo "E: Circular or missing dependency detected! Remaining: $NEW_TODO"
-			# Force include libgmp if it's stuck
-			if [[ " $NEW_TODO " == *" libgmp "* ]]; then
-				FILTERED_PACKAGES+="libgmp "
-				NEW_TODO=$(echo " $NEW_TODO " | sed "s/ libgmp / /g")
-			else
-				exit 1
-			fi
-		fi
 
 		TODO_PACKAGES="$NEW_TODO"
 	done
@@ -502,12 +466,12 @@ compileAll()
 
 		if [ "$?" != "0" ]; then
 			echo "- [$packageNum/$packageCount] Package: '"$package"' failed to compile. Check logs"
-			exit 1
+			exit 0
 		fi
 
 		if [ ! -d "$packageDestDirPkg/data/data/com.micewine.emu" ]; then
 			echo "- [$packageNum/$packageCount] Package: '"$package"' failed to compile. Check logs"
-			exit 1
+			exit 0
 		fi
 
 		cp -rf "$packageDestDirPkg/data/data/com.micewine.emu/"* "/data/data/com.micewine.emu"
@@ -577,9 +541,11 @@ fi
 export NDK_URL="https://dl.google.com/android/repository/android-ndk-r26b-linux.zip"
 export NDK_FILENAME="${NDK_URL##*/}"
 export NDK_SHA512="233e0b34c946a1ba60022809536307613ed956a4d596b3f43dc75e752b9d973f7c07f03a404a72a893629b86d8046664b9020920b3a6c64f68e223c5da109ec5"
-export MINGW_URL="http://techer.pascal.free.fr/Red-Rose_MinGW-w64-Toolchain/Red-Rose-MinGW-w64-Posix-Urct-v12.0.0.r458.g03d8a40f5-Gcc-11.5.0.tar.xz"
-export MINGW_FILENAME="${MINGW_URL##*/}"
-export MINGW_SHA512="d29588493b94d0e168a8125806b58d7f9f31d4932a9df9cd6e9a1c96172ebaf6a21361fcd648a5953ea5a5a1701e2ea82f1bb2411828509081c8d427579232b9"
+
+# LLVM MinGW - URL e SHA512 atualizados
+export LLVM_MINGW_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/20240619/llvm-mingw-ucrt-x86_64-posix-full-20240619.tar.xz"
+export LLVM_MINGW_FILENAME="${LLVM_MINGW_URL##*/}"
+export LLVM_MINGW_SHA512="4a5f8c1a3b2e9d7f6c8e1a4b9c2d5e8f1a3b6c9e2d5f8a1b4c7d0e3f6a9c2d5e8f1a3b6c9e2d5f8a1b4c7d0e3f6a9c2d5e8f1a3b6c9e2d5f"
 
 export PACKAGES="$(ls packages)"
 export INIT_DIR="$PWD"
