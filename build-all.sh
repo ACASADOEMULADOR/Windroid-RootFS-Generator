@@ -21,42 +21,53 @@ setupBuildEnv()
 
 	if [ ! -d "$INIT_DIR/cache/llvm-mingw" ]; then
 		echo "Downloading LLVM MinGW..."
-		curl --output "cache/$LLVM_MINGW_FILENAME" -#L "$LLVM_MINGW_URL"
+		curl -L --progress-bar --output "cache/$LLVM_MINGW_FILENAME" "$LLVM_MINGW_URL"
 		
 		if [ ! -f "cache/$LLVM_MINGW_FILENAME" ]; then
 			echo "Error: Failed to download LLVM MinGW. Check your internet connection."
 			exit 1
 		fi
 		
-		echo "Verifying LLVM MinGW archive..."
-		if ! tar -tf "cache/$LLVM_MINGW_FILENAME" > /dev/null 2>&1; then
-			echo "Error: Downloaded file is not a valid tar archive."
+		echo "Verifying downloaded file..."
+		FILE_SIZE=$(stat -c%s "cache/$LLVM_MINGW_FILENAME" 2>/dev/null)
+		echo "Downloaded: $FILE_SIZE bytes"
+		
+		if [ "$FILE_SIZE" -lt 5000000 ]; then
+			echo "Error: Downloaded file is too small (likely an error page)"
+			echo "URL: $LLVM_MINGW_URL"
+			echo ""
+			echo "First 500 bytes of file:"
+			head -c 500 "cache/$LLVM_MINGW_FILENAME"
+			echo ""
+			echo ""
 			rm -f "cache/$LLVM_MINGW_FILENAME"
+			echo "The URL may be incorrect or the release may no longer be available."
+			echo "Please check the GitHub releases page:"
+			echo "https://github.com/mstorsjo/llvm-mingw/releases"
 			exit 1
 		fi
 		
 		echo "Unpacking LLVM MinGW..."
-		
-		# Find directory name before extraction
-		LLVM_MINGW_DIR=$(tar -tf "cache/$LLVM_MINGW_FILENAME" | head -1 | cut -d "/" -f 1)
-		
 		tar -xf "cache/$LLVM_MINGW_FILENAME" -C "cache"
 		
 		if [ $? -ne 0 ]; then
-			echo "Error: Failed to extract LLVM MinGW archive."
+			echo "Error: Failed to extract archive"
 			rm -f "cache/$LLVM_MINGW_FILENAME"
 			exit 1
 		fi
 		
-		# Move the LLVM MinGW directory to standard location
-		if [ -d "cache/$LLVM_MINGW_DIR" ]; then
-			mv "cache/$LLVM_MINGW_DIR" "cache/llvm-mingw"
-		else
-			echo "Error: Could not find extracted LLVM MinGW directory."
+		# Find the extracted directory
+		LLVM_DIR=$(ls -d cache/llvm-mingw* 2>/dev/null | head -1)
+		
+		if [ -z "$LLVM_DIR" ]; then
+			echo "Error: Could not find llvm-mingw directory after extraction"
+			ls -la cache/
 			rm -f "cache/$LLVM_MINGW_FILENAME"
 			exit 1
 		fi
 		
+		# Rename to standard location
+		mv "$LLVM_DIR" "cache/llvm-mingw"
 		rm -f "cache/$LLVM_MINGW_FILENAME"
 		echo "LLVM MinGW installed successfully!"
 		echo ""
@@ -568,7 +579,9 @@ export NDK_URL="https://dl.google.com/android/repository/android-ndk-r26b-linux.
 export NDK_FILENAME="${NDK_URL##*/}"
 export NDK_SHA512="233e0b34c946a1ba60022809536307613ed956a4d596b3f43dc75e752b9d973f7c07f03a404a72a893629b86d8046664b9020920b3a6c64f68e223c5da109ec5"
 
-# LLVM MinGW - Versão mais recente
+# LLVM MinGW Download
+# Note: This URL points to the latest official LLVM MinGW release
+# If the download fails, check https://github.com/mstorsjo/llvm-mingw/releases for the latest version
 export LLVM_MINGW_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/20240619/llvm-mingw-ucrt-x86_64-posix-full-20240619.tar.xz"
 export LLVM_MINGW_FILENAME="${LLVM_MINGW_URL##*/}"
 
